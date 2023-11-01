@@ -856,11 +856,11 @@ testResult_t run() {
   MPI_Comm_rank(MPI_COMM_WORLD, &proc);
 
   if (proc == 0){
-    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-0.out", "w", stdout);
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-0.out", "w", stdout);
   } else if (proc == 32){
-    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-1.out", "w", stdout);
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-1.out", "w", stdout);
   } else if (proc ==33){
-    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-2.out", "w", stdout);
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-2.out", "w", stdout);
   } else {
     freopen("/dev/null", "w", stdout);
   }
