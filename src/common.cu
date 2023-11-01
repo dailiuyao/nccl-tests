@@ -858,9 +858,9 @@ testResult_t run() {
   if (proc == 0){
     freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-0.out", "w", stdout);
   } else if (proc == 32){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-1.out", "w", stdout);
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-32.out", "w", stdout);
   } else if (proc ==33){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-2.out", "w", stdout);
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-33.out", "w", stdout);
   } else {
     freopen("/dev/null", "w", stdout);
   }
