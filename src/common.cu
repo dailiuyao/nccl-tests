@@ -854,6 +854,17 @@ testResult_t run() {
 #ifdef MPI_SUPPORT
   MPI_Comm_size(MPI_COMM_WORLD, &totalProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &proc);
+
+  if (proc == 0){
+    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-0.out", "w", stdout);
+  } else if (proc == 32){
+    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-1.out", "w", stdout);
+  } else if (proc ==33){
+    freopen("/home/ldai8/scratch/msccl_build/deps/msccl-tools-lyd/examples/scripts/pinnacles-test/msccl-2.out", "w", stdout);
+  } else {
+    freopen("/dev/null", "w", stdout);
+  }
+
   uint64_t hostHashs[totalProcs];
   hostHashs[proc] = getHostHash(hostname);
   MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hostHashs, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD);
