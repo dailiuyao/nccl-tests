@@ -856,12 +856,14 @@ testResult_t run() {
   MPI_Comm_rank(MPI_COMM_WORLD, &proc);
 
   if (proc == 0){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/mccl-0.out", "w", stdout);
-  } else if (proc == 32){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/mccl-32.out", "w", stdout);
-  } else if (proc ==33){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/mccl-33.out", "w", stdout);
-  } else {
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-0.out", "w", stdout);
+  } else if (proc == 1){
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-1.out", "w", stdout);
+  } else if (proc == 2){
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-2.out", "w", stdout);
+  } else if (proc == 3){
+    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-3.out", "w", stdout);
+  }else {
     freopen("/dev/null", "w", stdout);
   }
 
