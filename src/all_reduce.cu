@@ -85,11 +85,15 @@ testResult_t AllReduceRunTest(struct threadArgs* args, int root, ncclDataType_t 
     run_opnames = test_opnames;
   }
 
+  printf("HOST | allreduce.cu:88 | AllReduceRunTest() | TimeTest start\n");
   for (int i=0; i<type_count; i++) {
     for (int j=0; j<op_count; j++) {
+      printf("HOST | allreduce.cu:91 | AllReduceRunTest() | start type_count %d, op_count %d\n", i, j);
       TESTCHECK(TimeTest(args, run_types[i], run_typenames[i], run_ops[j], run_opnames[j], -1));
+      printf("HOST | allreduce.cu:93 | AllReduceRunTest() | end type_count %d, op_count %d\n", i, j);
     }
   }
+  printf("HOST | allreduce.cu:96 | AllReduceRunTest() | TimeTest finished\n");
   return testSuccess;
 }
 

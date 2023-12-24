@@ -327,6 +327,7 @@ testResult_t testStreamSynchronize(int ngpus, cudaStream_t* streams, ncclComm_t*
 }
 
 testResult_t startColl(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t opIndex, int root, int in_place, int iter) {
+  printf("HOST | %s:%d | startColl() | start startColl(), type is %d, opIndex is %d, root is %d, in_place is %d, iter is %d\n", __FILE__, __LINE__, type, opIndex, root, in_place, iter);
   size_t count = args->nbytes / wordSize(type);
 
   // Try to change offset for each iteration so that we avoid cache effects and catch race conditions in ptrExchange
@@ -396,9 +397,12 @@ testResult_t startColl(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t
 }
 
 testResult_t completeColl(struct threadArgs* args) {
+  printf("HOST | %s:%d | completeColl() | blocking_coll is: %d\n", __FILE__, __LINE__, blocking_coll);
   if (blocking_coll) return testSuccess;
 
+  printf("HOST | %s:%d | completeColl() | before testStreamSynchronize()\n", __FILE__, __LINE__);
   TESTCHECK(testStreamSynchronize(args->nGpus, args->streams, args->comms));
+  printf("HOST | %s:%d | completeColl() | after testStreamSynchronize()\n", __FILE__, __LINE__);
   return testSuccess;
 }
 
@@ -410,9 +414,11 @@ testResult_t BenchTime(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t
   }
 
   // Sync
+  printf("HOST | %s:%d | BenchTime() | start syc\n", __FILE__, __LINE__);
   TESTCHECK(startColl(args, type, op, root, in_place, 0));
   TESTCHECK(completeColl(args));
 
+  printf("HOST | %s:%d | BenchTime() | end sync\n", __FILE__, __LINE__);
   Barrier(args);
 
 #if CUDART_VERSION >= 11030
@@ -432,15 +438,19 @@ testResult_t BenchTime(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t
 
   // Performance Benchmark
   timer tim;
+  printf("HOST | %s:%d | BenchTime() | before Performance Benchmark\n", __FILE__, __LINE__);
   for (int iter = 0; iter < iters; iter++) {
     if (agg_iters>1) NCCLCHECK(ncclGroupStart());
     for (int aiter = 0; aiter < agg_iters; aiter++) {
       TESTCHECK(startColl(args, type, op, root, in_place, iter*agg_iters+aiter));
+      // TESTCHECK(startColl(args, type, op, root, in_place, 0));
     }
     if (agg_iters>1) NCCLCHECK(ncclGroupEnd());
   }
+  printf("HOST | %s:%d | BenchTime() | after Performance Benchmark\n", __FILE__, __LINE__);
 
 #if CUDART_VERSION >= 11030
+  printf("HOST | %s:%d | BenchTime() | start graph capture\n", __FILE__, __LINE__);
   if (cudaGraphLaunches >= 1) {
     // End cuda graph capture
     for (int i=0; i<args->nGpus; i++) {
@@ -459,10 +469,14 @@ testResult_t BenchTime(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t
       }
     }
   }
+  printf("HOST | %s:%d | BenchTime() | end graph capture\n", __FILE__, __LINE__);
 #endif
 
+  printf("HOST | %s:%d | BenchTime() | before Performance Benchmark's completeColl()\n", __FILE__, __LINE__);
   double cputimeSec = tim.elapsed()/(iters*agg_iters);
   TESTCHECK(completeColl(args));
+
+  printf("HOST | %s:%d | BenchTime() | after Performance Benchmark's completeColl()\n", __FILE__, __LINE__);
 
   double deltaSec = tim.elapsed();
   deltaSec = deltaSec/(iters*agg_iters);
@@ -482,7 +496,11 @@ testResult_t BenchTime(struct threadArgs* args, ncclDataType_t type, ncclRedOp_t
   double algBw, busBw;
   args->collTest->getBw(count, wordSize(type), deltaSec, &algBw, &busBw, args->nProcs*args->nThreads*args->nGpus);
 
+  printf("HOST | %s:%d | BenchTime() | after args->collTest->getBw and before barrier()\n", __FILE__, __LINE__);
+  
   Barrier(args);
+
+  printf("HOST | %s:%d | BenchTime() | after args->collTest->getBw and barrier()\n", __FILE__, __LINE__);
 
   int64_t wrongElts = 0;
   static __thread int rep = 0;
@@ -581,11 +599,13 @@ testResult_t TimeTest(struct threadArgs* args, ncclDataType_t type, const char* 
   Barrier(args);
 
   // Warm-up for large size
+  printf("HOST | %s:%d | TimeTest() | before startColl for large size\n", __FILE__, __LINE__);
   setupArgs(args->maxbytes, type, args);
   for (int iter = 0; iter < warmup_iters; iter++) {
     TESTCHECK(startColl(args, type, op, root, 0, iter));
   }
   TESTCHECK(completeColl(args));
+  printf("HOST | %s:%d | TimeTest() | after completeColl for large size\n", __FILE__, __LINE__);
 
   // Warm-up for small size
   setupArgs(args->minbytes, type, args);
@@ -594,16 +614,24 @@ testResult_t TimeTest(struct threadArgs* args, ncclDataType_t type, const char* 
   }
   TESTCHECK(completeColl(args));
 
+  printf("HOST | %s:%d | TimeTest() | before BenchTime()\n", __FILE__, __LINE__);
+
   // Benchmark
   for (size_t size = args->minbytes; size<=args->maxbytes; size = ((args->stepfactor > 1) ? size*args->stepfactor : size+args->stepbytes)) {
       setupArgs(size, type, args);
       char rootName[100];
       sprintf(rootName, "%6i", root);
       PRINT("%12li  %12li  %8s  %6s  %6s", max(args->sendBytes, args->expectedBytes), args->nbytes / wordSize(type), typeName, opName, rootName);
+      printf("HOST | %s:%d | TimeTest() | The first BenchTime launched, start out of place\n", __FILE__, __LINE__);
       TESTCHECK(BenchTime(args, type, op, root, 0));
+      printf("HOST | %s:%d | TimeTest() | The first BenchTime finished, end out of place\n", __FILE__, __LINE__);
+      printf("HOST | %s:%d | TimeTest() | The second BenchTime launched, start in place\n", __FILE__, __LINE__);
       TESTCHECK(BenchTime(args, type, op, root, 1));
+      printf("HOST | %s:%d | TimeTest() | The second BenchTime finished, end in place\n", __FILE__, __LINE__);
       PRINT("\n");
   }
+
+  printf("HOST | %s:%d | TimeTest() | after BenchTime()\n", __FILE__, __LINE__);
   return testSuccess;
 }
 
@@ -612,7 +640,9 @@ testResult_t threadRunTests(struct threadArgs* args) {
   // will be done on the current GPU (by default : 0) and if the GPUs are in
   // exclusive mode those operations will fail.
   CUDACHECK(cudaSetDevice(args->gpus[0]));
+  printf("HOST | %s:%d | threadRunTests() | ncclTestEngine().runTest start\n", __FILE__, __LINE__);
   TESTCHECK(ncclTestEngine.runTest(args, ncclroot, (ncclDataType_t)nccltype, test_typenames[nccltype], (ncclRedOp_t)ncclop, test_opnames[ncclop]));
+  printf("HOST | %s:%d | threadRunTests() | ncclTestEngine().runTest finished\n", __FILE__, __LINE__);
   return testSuccess;
 }
 
@@ -855,12 +885,23 @@ testResult_t run() {
   MPI_Comm_size(MPI_COMM_WORLD, &totalProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &proc);
 
-  if (proc == 0){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-0.out", "w", stdout);
-  } else if (proc == 1){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-1.out", "w", stdout);
-  } else if (proc ==2){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/nccl-2.out", "w", stdout);
+  char filename[256];
+
+
+  // printf("proc is: %d\n", proc);
+  // int gdb = 1;
+  // if (proc == 0){
+  //   gdb = 0;
+  //   printf("proc is: %d, pid is %d\n", proc, (int)getpid());
+  // }
+  // while(gdb == 0){
+  //   printf("loop\n");
+  //   sleep(10);
+  // }
+
+  if (proc < 16) {
+    sprintf(filename, "/home1/09168/ldai1/ccl-build/msccl_tools_lyd/examples/scripts/frontera-test/nccl-output/nccl-%d.out", proc);
+    freopen(filename, "w", stdout);
   } else {
     freopen("/dev/null", "w", stdout);
   }
@@ -972,6 +1013,8 @@ testResult_t run() {
      }
   }
 
+  printf("HOST | %s:%d | run() | ncclGroupEnd() finished\n", __FILE__, __LINE__);
+
   int errors[nThreads];
   double bw[nThreads];
   double* delta;
@@ -981,6 +1024,8 @@ testResult_t run() {
     bw[t] = 0.0;
     errors[t] = bw_count[t] = 0;
   }
+
+  printf("HOST | %s:%d | run() | cudaHostAlloc() finished\n", __FILE__, __LINE__);
 
   fflush(stdout);
 
