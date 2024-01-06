@@ -855,15 +855,10 @@ testResult_t run() {
   MPI_Comm_size(MPI_COMM_WORLD, &totalProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &proc);
 
-  if (proc == 0){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-0.out", "w", stdout);
-  } else if (proc == 1){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-1.out", "w", stdout);
-  } else if (proc == 2){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-2.out", "w", stdout);
-  } else if (proc == 3){
-    freopen("/home/yuke/ncclPG/msccl_tools_lyd/examples/scripts/polaris-test/msccl-3.out", "w", stdout);
-  }else {
+  if (proc < 16) {
+    sprintf(filename, "/home1/09168/ldai1/ccl-build/msccl_tools_lyd/examples/scripts/frontera-test/msccl-output/msccl-%d.out", proc);
+    freopen(filename, "w", stdout);
+  } else {
     freopen("/dev/null", "w", stdout);
   }
 
