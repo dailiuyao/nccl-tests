@@ -12,6 +12,8 @@ DEBUG ?= 0
 CUDA_LIB ?= $(CUDA_HOME)/lib64
 CUDA_INC ?= $(CUDA_HOME)/include
 NVCC ?= $(CUDA_HOME)/bin/nvcc
+CC=mpicc
+CXX=mpicxx
 CUDARTLIB ?= cudart
 
 CUDA_VERSION = $(strip $(shell which $(NVCC) >/dev/null && $(NVCC) --version | grep release | sed 's/.*release //' | sed 's/\,.*//'))
@@ -64,7 +66,7 @@ endif
 
 ifeq ($(MPI), 1)
 NVCUFLAGS += -DMPI_SUPPORT -I$(MPI_HOME)/include
-NVLDFLAGS += -L$(MPI_HOME)/lib -L$(MPI_HOME)/lib64 -lmpi
+NVLDFLAGS += -L$(MPI_HOME)/lib -L$(MPI_HOME)/lib64
 endif
 ifeq ($(MPI_IBM),1)
 NVCUFLAGS += -DMPI_SUPPORT
