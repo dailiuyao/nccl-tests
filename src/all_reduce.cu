@@ -84,16 +84,24 @@ testResult_t AllReduceRunTest(struct threadArgs* args, int root, ncclDataType_t 
     run_ops = test_ops;
     run_opnames = test_opnames;
   }
-
+  
+  #if PROFILE_LYD_HOST == 1
   printf("HOST | allreduce.cu:88 | AllReduceRunTest() | TimeTest start\n");
+  #endif
   for (int i=0; i<type_count; i++) {
     for (int j=0; j<op_count; j++) {
+      #if PROFILE_LYD_HOST == 1
       printf("HOST | allreduce.cu:91 | AllReduceRunTest() | start type_count %d, op_count %d\n", i, j);
+      #endif
       TESTCHECK(TimeTest(args, run_types[i], run_typenames[i], run_ops[j], run_opnames[j], -1));
+      #if PROFILE_LYD_HOST == 1
       printf("HOST | allreduce.cu:93 | AllReduceRunTest() | end type_count %d, op_count %d\n", i, j);
+      #endif
     }
   }
+  #if PROFILE_LYD_HOST == 1
   printf("HOST | allreduce.cu:96 | AllReduceRunTest() | TimeTest finished\n");
+  #endif
   return testSuccess;
 }
 
